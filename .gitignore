@@ -1,0 +1,10 @@
+/Bindings/Rust/target
+/Bindings/Rust/Cargo.lock
+
+/obj
+/bin
+/.vscode
+
+/FallenAngel.make
+/file.txt
+/Makefile
