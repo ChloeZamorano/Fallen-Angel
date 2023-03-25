@@ -4,13 +4,48 @@
 
 using namespace fln;
 
+inline void PrintBuffer(u8* ptr, u64 len, cstr indent)
+{
+	if(len <= UINT32_MAX)
+	{
+		std::cout << std::hex << std::uppercase <<
+			indent << "         | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" <<
+			indent << "---------|------------------------------------------------\n" <<
+			indent << "00000000 | ";
+		for (u64 i = 0; i < len; ++i)
+		{
+			std::cout <<
+				std::setw(2) << std::setfill('0') << (u32)ptr[i] << ' ';
+
+			if ((i + 1) % 16 == 0 && i != len-1)
+				std::cout << "\n" << indent <<
+				std::setw(8) << std::setfill('0') << i+1 << " | ";
+		}
+	}
+	else
+	{
+		std::cout << std::hex << std::uppercase <<
+			indent << "                 | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" <<
+			indent << "-----------------|------------------------------------------------\n" <<
+			indent << "0000000000000000 | ";
+		for (u64 i = 0; i < len; ++i)
+		{
+			std::cout <<
+				std::setw(2) << std::setfill('0') << (u32)ptr[i] << ' ';
+
+			if ((i + 1) % 16 == 0)
+				std::cout << "\n" << indent <<
+				std::setw(16) << std::setfill('0') << i+1 << " | ";
+		}
+	}
+	std::cout << std::dec << std::nouppercase << "\n";
+}
+
 i32 main()
 {
-	Result<cstr, he::BinaDescriptor> fileRes =
+	he::BinaDescriptor file =
 		he::BinaDescriptor::Load(
 		"./w9d02_obj_area00.gedit");
-
-	he::BinaDescriptor file = fileRes.Expect();
 	
 	std::string sig;
 	sig.assign(file.m_Header->Signature, file.m_Header->Signature + 4);
@@ -40,35 +75,18 @@ i32 main()
 				"		OffsetTableLength:    " << node->OffsetTableLength << "\n" <<
 				"		AdditionalDataLength: " << node->AdditionalDataLength << "\n" <<
 				"		Padding:              " << node->Padding << "\n" <<
-				"		AdditionalData:" << "\n" <<
-				"			00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" <<
-				"			-----------------------------------------------\n" <<
-				std::hex << std::uppercase << "			";
-			for(u32 j = 0; j < nodeDesc.m_Node->AdditionalDataLength; ++j)
-			{
-				std::cout << std::setw(2) << std::setfill('0') <<
-					(u32)nodeDesc.m_AdditionalData[j] << " ";
-				
-				if((j+1)%16 == 0)
-				{
-					std::cout << "\n			";
-				}
-			}
+				"		AdditionalData:\n";
+			PrintBuffer(
+				nodeDesc.m_AdditionalData,
+				nodeDesc.m_Node->AdditionalDataLength,
+				"			");
 			std::cout <<
-				"\n		Data:" << "\n" <<
-				"			00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" <<
-				"			-----------------------------------------------\n" <<
-				"			";
-			for(u32 j = 0; j < nodeDesc.m_DataLength; ++j)
-			{
-				std::cout << std::setw(2) << std::setfill('0') <<
-					(u32)nodeDesc.m_Data[j] << " ";
-				
-				if((j+1)%16 == 0)
-				{
-					std::cout << "\n			";
-				}
-			}
+				"		Data:\n";
+			PrintBuffer(
+				nodeDesc.m_Data,
+				nodeDesc.m_DataLength,
+				"			");
+
 			u64 pos = 0;
 			std::cout <<
 				std::dec << std::nouppercase <<
@@ -82,48 +100,24 @@ i32 main()
 				pos += strlen(nodeDesc.m_StringsTable+pos)+1;
 			}
 			std::cout <<
-				"		OffsetsTable:" << "\n" <<
-				std::hex << std::uppercase;
-			pos = 0;
-			while(pos < nodeDesc.m_Node->OffsetTableLength)
+				"		OffsetsTable:" << "\n";
+				PrintBuffer(
+					nodeDesc.m_OffsetsTable,
+					nodeDesc.m_Node->OffsetTableLength,
+					"			");
+
+			std::cout << std::hex << std::uppercase <<
+				"		Values as u32's:\n";
+			std::vector<u32> ptrs = file.m_Nodes[i].
+				GetOffsets(64);
+			for(u32 j = 0; j < ptrs.size(); ++j)
 			{
-				auto ptr = (u32*)(nodeDesc.m_OffsetsTable + pos);
-				auto lenptr = (u8*)ptr;
-				//std::cout << std::setw(8) << std::setfill('0') << *ptr << "\n";
-				switch((*lenptr) & 0xC0)
-				{
-				case 0x40:
-					{
-						std::cout << "			" << std::setw(8) << std::setfill('0') <<
-							(u32)((*lenptr & 0x3F) << 2) << "\n";
-						++pos;
-					}
-					break;
-				case 0x80:
-					{
-						std::cout << "			" << std::setw(8) << std::setfill('0') <<
-							((*(u16*)ptr & 0x3FFF) << 2) << "\n";
-						pos += 2;
-					}
-					break;
-				case 0xC0:
-					{
-						std::cout << "			" << std::setw(8) << std::setfill('0') <<
-							((*ptr & 0x3FFF'FFFF) << 2) << "\n";
-						pos += 4;
-					}
-					break;
-				default:
-					pos += 4;
-					break;
-				}
+				std::cout <<
+					"			" << std::setw(8) << std::setfill('0') <<
+					*(u32*)(ptrs[j]+((u8*)file.m_Header)) << "\n";
 			}
-			std::cout <<
-				std::dec << std::nouppercase <<
-				"		Values:" << "\n";
-			
+			std::cout << "EOF";
 		}
-		else
-			throw std::logic_error("Node not implemented.");
+		else throw std::logic_error("Node not implemented.");
 	}
 }

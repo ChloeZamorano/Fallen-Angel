@@ -2,7 +2,12 @@
 
 namespace fln::he
 {
-	Result<cstr, BinaDescriptor> BinaDescriptor::Load(cstr filePath)
+	BinaDescriptor::~BinaDescriptor()
+	{
+		free(m_Header);
+	}
+
+	BinaDescriptor BinaDescriptor::Load(cstr filePath)
 	{
 		BinaDescriptor output;
 
@@ -12,14 +17,7 @@ namespace fln::he
 		FILE *file = fopen(filePath, "rb");
 		if(file == null)
 		{
-			return
-			{
-				false,
-				"Error opening the file.\n"
-				"Does the file exist? Is the path correct?"
-				"Does it have read permissions?\n",
-				null
-			};
+			throw std::logic_error("");
 		}
 		fseek(file, 0, SEEK_END);
 		output.m_PhysicalFileSize = ftell(file);
@@ -39,17 +37,12 @@ namespace fln::he
 		{
 			BinaNode* ptr;
 			if(i == 0)
-				ptr = (BinaNode*)(((void*)output.m_Header) + sizeof(BinaHeader));
+				ptr = (BinaNode*)(((u8*)output.m_Header) + sizeof(BinaHeader));
 			else
-				ptr = (BinaNode*)(((void*)output.m_Nodes[i-1].m_Node) + output.m_Nodes[i-1].m_Node->Basic.Length);
-			output.m_Nodes.push_back(BinaDataNodeDescriptor::Read(ptr).Expect());
+				ptr = (BinaNode*)(((u8*)output.m_Nodes[i-1].m_Node) + output.m_Nodes[i-1].m_Node->Basic.Length);
+			output.m_Nodes.push_back(BinaDataNodeDescriptor(ptr));
 		}
 
-		return
-		{
-			true,
-			null,
-			output
-		};
+		return output;
 	}
 }

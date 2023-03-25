@@ -6,7 +6,6 @@
 
 namespace fln::he
 {
-	#pragma pack(1)
 	struct BinaHeader
 	{
 		char Signature[4];
@@ -21,7 +20,6 @@ namespace fln::he
 	{
 	public:
 		BinaHeader* m_Header;
-		// This is an array of u8's so that nodes of different sizes can be addressed.
 		std::vector<BinaDataNodeDescriptor> m_Nodes;
 		void* m_EndOfVirtualFile;
 
@@ -29,6 +27,7 @@ namespace fln::he
 		// or more accurately won't look at.
 		u64 m_PhysicalFileSize;
 
-		static Result<cstr, BinaDescriptor> Load(cstr filePath);
+		~BinaDescriptor();
+		static BinaDescriptor Load(cstr filePath);
 	};
 }

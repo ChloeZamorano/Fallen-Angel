@@ -3,12 +3,16 @@ workspace "FallenAngel"
 	{
 		"Debug",
 		"Release",
-		"Deploy" }
+		"Deploy"
+	}
 
 	project "FallenAngel"
 		kind "ConsoleApp"
 		language "C++"
-		targetdir "bin/lib/%{cfg.buildcfg}"
+		cppdialect "C++20"
+		cdialect "C17"
+		toolset "clang"
+		targetdir "bin"
 
 		files
 		{
@@ -24,9 +28,8 @@ workspace "FallenAngel"
 			"./Lib/inc/",
 			"./Lib/"
 		}
-
-		pchheader "./Lib/pch.hpp"
-		pchsource "./Lib/pch.cpp"
+		
+		pchheader "pch.hpp"
 
 		filter "configurations:Debug"
 			defines { "DEBUG" }

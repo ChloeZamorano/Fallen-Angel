@@ -29,6 +29,20 @@ namespace fln::he
 		u16 Padding;
 	};
 
+	enum class OffsetMask : u8
+	{
+		SizeMask	= 0xC0ui8,
+
+		SizeU8		= 0x40ui8,
+		SizeU16		= 0x80ui8,
+		SizeU32		= 0xC0ui8
+	};
+
+	inline OffsetMask operator &(const OffsetMask& left, const OffsetMask& right)
+	{
+		return (OffsetMask)((u8)left & (u8)right);
+	}
+
 	class BinaDataNodeDescriptor
 	{
 	public:
@@ -42,6 +56,9 @@ namespace fln::he
 
 		u64 m_DataLength;
 
-		static Result<cstr, BinaDataNodeDescriptor> Read(BinaNode* basicNode);
+		BinaDataNodeDescriptor(BinaNode* base);
+
+		u32 GetNextOffset(u32 previousPtr, u32& i);
+		std::vector<u32> GetOffsets(u32 sizeofBinaHeader);
 	};
 }
