@@ -2,10 +2,10 @@
 #include "pch.hpp"
 
 #include "HE/BinaNodes.hpp"
-#include "Result.tpp"
 
 namespace fln::he
 {
+	// TODO: Handle endianness
 	struct BinaHeader
 	{
 		char Signature[4];
@@ -13,13 +13,15 @@ namespace fln::he
 		u8 EndianFlag;
 		u32 FileSize;
 		u16 NodeCount;
-		u16 Unknown;	// Look into what's up with this value
+		u16 Unknown;	// TODO: Look into what's up with this value
 	};
 
 	class BinaDescriptor
 	{
 	public:
 		BinaHeader* m_Header;
+		// TODO: Use a template or something instead
+		// to support different types of nodes.
 		std::vector<BinaDataNodeDescriptor> m_Nodes;
 		void* m_EndOfVirtualFile;
 

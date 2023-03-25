@@ -1,4 +1,5 @@
 #include "HE/Bina.hpp"
+#include <string>
 
 namespace fln::he
 {
@@ -14,10 +15,14 @@ namespace fln::he
 		//
 		// Open and read file
 		//
-		FILE *file = fopen(filePath, "rb");
-		if(file == null)
+		FILE* file;
+		errno_t err;
+		if ((err = fopen_s(&file, filePath, "rb")) != null)
 		{
-			throw std::logic_error("");
+			std::stringstream ss;
+			ss << "Could not read file \"" << filePath << "\"\n" <<
+				"Error code: " << err;
+			throw std::logic_error(ss.str());
 		}
 		fseek(file, 0, SEEK_END);
 		output.m_PhysicalFileSize = ftell(file);

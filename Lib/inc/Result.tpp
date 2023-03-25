@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.hpp"
 
-template<class E, class K>
+template<typename E, typename K>
 class Result
 {
 public:

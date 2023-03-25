@@ -1,8 +1,6 @@
 #pragma once
 #include "pch.hpp"
 
-#include "Result.tpp"
-
 namespace fln::he
 {
 	struct BinaNode
@@ -16,16 +14,11 @@ namespace fln::he
 	{
 		BinaNode Basic;
 
-		// The non-absolute (relative to the beginning of the Data array below, which is always
-		// 0x40 from our findings) offset to the BINA String Table explained below.
 		u32 StringTableOffset;
-		// The length of the BINA String Table explained below.
 		u32 StringTableLength;
 
-		// The length of the BINA Offset Table explained below.
 		u32 OffsetTableLength;
 		u16 AdditionalDataLength;
-		// Just two nulls to pad-out AdditionalDataLength to 4 bytes.
 		u16 Padding;
 	};
 
@@ -37,6 +30,10 @@ namespace fln::he
 		SizeU16		= 0x80ui8,
 		SizeU32		= 0xC0ui8
 	};
+
+	const  u8 OFFSET_06_DATA_MASK = 0x3Fui8;
+	const u16 OFFSET_14_DATA_MASK = 0x3FFFui16;
+	const u32 OFFSET_30_DATA_MASK = 0x3FFF'FFFFui32;
 
 	inline OffsetMask operator &(const OffsetMask& left, const OffsetMask& right)
 	{
@@ -58,7 +55,10 @@ namespace fln::he
 
 		BinaDataNodeDescriptor(BinaNode* base);
 
-		u32 GetNextOffset(u32 previousPtr, u32& i);
-		std::vector<u32> GetOffsets(u32 sizeofBinaHeader);
+		u64 GetNextOffset(u64 previousPtr, u32& i);
+		std::vector<u64> GetOffsets();
+
+		u8* GetNextPointer(u8* previousPtr, u32& i);
+		std::vector<u8*> GetPointers(u8* header);
 	};
 }

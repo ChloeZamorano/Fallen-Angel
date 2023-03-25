@@ -15,47 +15,74 @@ namespace fln::he
 			+ m_Node->AdditionalDataLength);
 	}
 
-	// TODO: Documentation says to bit shift the values to the left by 2
-	// but that causes a segfault after dereferencing a few offsets. Got to
-	// figure out what funkiness is going on there; for now let's see
-	// if it works without it.
-	u32 BinaDataNodeDescriptor::GetNextOffset(u32 previousPtr, u32& i)
+	u64 BinaDataNodeDescriptor::GetNextOffset(u64 previousPtr, u32& i)
 	{
 		auto ptr = (u8*)(m_OffsetsTable + i);
-		u32 offset = 0;
+		u8 b1 = ptr[0] & OFFSET_06_DATA_MASK;
+		u8 b2 = ptr[1];
+		u8 b3 = ptr[2];
+		u8 b4 = ptr[3];
+		u64 offset = 0;
 		switch (*(OffsetMask*)ptr & OffsetMask::SizeMask)
 		{
 		case OffsetMask::SizeU8:
+			offset = (u32)(b1 << 2);
 			++i;
-			offset = ((*(u8*)ptr) & 0x3Fui8) << 0;
 			return previousPtr + offset;
 		case OffsetMask::SizeU16:
+			offset = (u32)(
+				((b1 << 8) | b2)
+				<< 2);
 			i += 2;
-			offset = ((*(u16*)ptr) & 0x3FFFui16) << 0;
 			return previousPtr + offset;
 		case OffsetMask::SizeU32:
+			offset = (u32)(
+				((b1 << 24) | (b2 << 16) | (b3 << 8) | b4)
+				<< 2);
 			i += 4;
-			offset = ((*(u32*)ptr) & 0x3FFF'FFFFui32) << 0;
 			return previousPtr + offset;
 		default:
 			return null;
 		}
 	}
 
-	std::vector<u32> BinaDataNodeDescriptor::GetOffsets(u32 sizeofBinaHeader)
+	std::vector<u64> BinaDataNodeDescriptor::GetOffsets()
 	{
-		std::vector<u32> output;
+		std::vector<u64> output;
 		u32 i = 0;
 		while(i < m_Node->OffsetTableLength)
 		{
-			u32 prevptr = output.size() == 0 ?
-				sizeofBinaHeader :
+			u64 prevptr = output.size() == 0 ?
+				64 :
 				output[output.size()-1];
 
-			u32 ptr = GetNextOffset(prevptr, i);
+			u64 ptr = GetNextOffset(prevptr, i);
 			if (ptr == null)
 				return output;
-			output.push_back(ptr);
+			output.emplace_back(ptr);
+		}
+		return output; // This should never happen.
+	}
+
+	u8* BinaDataNodeDescriptor::GetNextPointer(u8* previousPtr, u32& i)
+	{
+		return (u8*)GetNextOffset((u64)previousPtr, i);
+	}
+
+	std::vector<u8*> BinaDataNodeDescriptor::GetPointers(u8* header)
+	{
+		std::vector<u8*> output;
+		u32 i = 0;
+		while(i < m_Node->OffsetTableLength)
+		{
+			u8* prevptr = output.size() == 0 ?
+				header + 64 :
+				output[output.size()-1];
+
+			u8* ptr = GetNextPointer(prevptr, i);
+			if (ptr == null)
+				return output;
+			output.emplace_back(ptr);
 		}
 		return output; // This should never happen.
 	}
