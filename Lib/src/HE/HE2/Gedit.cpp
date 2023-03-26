@@ -1,18 +1,27 @@
 #include "HE/HE2/Gedit.hpp"
-#include <stdexcept>
 
 namespace fln::he2
 {
-	GeditDescriptor GeditDescriptor::Load(cstr filePath)
+	Result<GeditDescriptor> GeditDescriptor::Load(cstr filePath)
 	{
 		GeditDescriptor output;
-		auto bina = BinaDescriptor::Load(filePath);
+		auto binaR = BinaDescriptor::Load(filePath);
+		if (!binaR.m_IsOk)
+			return Result<GeditDescriptor>
+			{
+				.m_IsOk = false,
+				.m_Error = binaR.m_Error,
+				.m_Ok = output
+			};
+		output.m_Bina = binaR.m_Ok;
 
-		output.m_Bina = bina;
-		output.m_Header = (GeditHeader*)bina.m_Nodes[0].m_Data;
-		output.m_ObjectOffsetTable = (u64*)(((u8*)output.m_Header) + sizeof(GeditHeader));
-		output.m_Objects = (Object*)(output.m_ObjectOffsetTable + output.m_Header->ObjectCount);
+		auto node = std::static_pointer_cast<he::BinaDataNodeDescriptor>(output.m_Bina.m_Nodes[0]);
 
-		return output;
+		return Result<GeditDescriptor>
+		{
+			.m_IsOk = true,
+			.m_Error = "",
+			.m_Ok = output
+		};
 	}
 }

@@ -1,12 +1,18 @@
 # Fallen Angel
 
 <p align="justify">
-	A C++ library to contain any function, container, or type that 	requires memory management. It is for usage in high level languages using binding libraries.
+	A serialization library for convoluted containers and formats.
 </p>
 <p align="justify">
-	Currently the Rust binding is empty, and the library itself is actually a console app for testing purposes. The app will simply read the file <code>w9d02_obj_area00.gedit</code> and print the data of the container.
+	This repository contains the library written in C++ as well as binding libraries for other languages where said formats can't be easily serialized.
 </p>
 
-## WIP Container Support
 
-<li> V210 Bina container from Hedgehog Engine 2.
+# Features
+
+## WIP
+
+* ### Bina container from Hedgehog Engine.
+	* V210 Bina from HE2
+	* Reflection format from HE2
+	* Gedit format from HE2

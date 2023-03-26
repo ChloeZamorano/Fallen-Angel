@@ -3,7 +3,14 @@
 
 /obj
 /bin
+
+/.vs
 /.vscode
 
 /FallenAngel.make
 /Makefile
+
+/FallenAngel.sln
+/FallenAngel.vcxproj
+/FallenAngel.vcxproj.filters
+/FallenAngel.vcxproj.user

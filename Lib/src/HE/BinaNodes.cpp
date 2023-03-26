@@ -2,17 +2,39 @@
 
 namespace fln::he
 {
-	BinaDataNodeDescriptor::BinaDataNodeDescriptor(BinaNode* basicNode)
+	std::shared_ptr<BinaNodeDescriptor> BinaNodeDescriptor::New(BinaNode* base)
 	{
-		m_Node = (BinaDataNode*)basicNode;
-		m_AdditionalData = (((u8*)basicNode) + sizeof(BinaDataNode));
-		m_Data = m_AdditionalData + m_Node->AdditionalDataLength;
-		m_StringsTable = (cstr)m_Data + m_Node->StringTableOffset;
-		m_OffsetsTable = (u8*)m_StringsTable + m_Node->StringTableLength;
+		switch(*(u32*)base->Signature)
+		{
+		case BINA_NODE_TYPE_DATA:
+			return BinaDataNodeDescriptor::New(base);
+		default:
+			std::stringstream ss;
+			ss << "Bina node type \"" <<
+				base->Signature[0] <<
+				base->Signature[1] <<
+				base->Signature[2] <<
+				base->Signature[3] <<
+				"\" not yet implemented!";
+			throw std::logic_error(ss.str());
+		}
+	}
 
-		m_DataLength =
-			m_Node->Basic.Length - (sizeof(BinaDataNode)
-			+ m_Node->AdditionalDataLength);
+	std::shared_ptr<BinaDataNodeDescriptor> BinaDataNodeDescriptor::New(BinaNode* base)
+	{
+		auto output = std::make_shared<BinaDataNodeDescriptor>();
+		output->m_Head = base;
+		output->m_Node = (BinaDataNode*)((u8*)base + sizeof(BinaNode));
+		output->m_AdditionalData = (((u8*)output->m_Node) + sizeof(BinaDataNode));
+		output->m_Data = output->m_AdditionalData + output->m_Node->AdditionalDataLength;
+		output->m_StringsTable = (cstr)output->m_Data + output->m_Node->StringTableOffset;
+		output->m_OffsetsTable = (u8*)output->m_StringsTable + output->m_Node->StringTableLength;
+
+		output->m_DataLength =
+			output->m_Head->Length -(sizeof(BinaDataNode)
+			+ output->m_Node->AdditionalDataLength);
+
+		return output;
 	}
 
 	u64 BinaDataNodeDescriptor::GetNextOffset(u64 previousPtr, u32& i)
@@ -42,7 +64,7 @@ namespace fln::he
 			i += 4;
 			return previousPtr + offset;
 		default:
-			return null;
+			return NULL;
 		}
 	}
 
@@ -57,7 +79,7 @@ namespace fln::he
 				output[output.size()-1];
 
 			u64 ptr = GetNextOffset(prevptr, i);
-			if (ptr == null)
+			if (ptr == NULL)
 				return output;
 			output.emplace_back(ptr);
 		}
@@ -80,10 +102,26 @@ namespace fln::he
 				output[output.size()-1];
 
 			u8* ptr = GetNextPointer(prevptr, i);
-			if (ptr == null)
+			if (ptr == NULL)
 				return output;
-			output.emplace_back(ptr);
+			output.push_back(ptr);
 		}
 		return output; // This should never happen.
+	}
+
+	std::vector<cstr> BinaDataNodeDescriptor::GetStrings()
+	{
+		std::vector<cstr> output;
+
+		u32 pos = 0;
+		while (pos < m_Node->StringTableLength)
+		{
+			if (m_StringsTable[pos] == NULL)
+				break;
+
+			output.emplace_back(m_StringsTable + pos);
+			pos += strlen(m_StringsTable + pos) + 1;
+		}
+		return output;
 	}
 }

@@ -41,7 +41,44 @@ typedef const char* cstr;
 //
 #define CSTR_TO_SIG32(x) (*((u32*)x))
 
-#define null 0
+#define NULL 0
 
-#define true 1
-#define false 0
+//
+// Functions
+//
+inline void PrintBuffer(u8* ptr, u64 len, cstr indent)
+{
+	if (len <= UINT32_MAX)
+	{
+		std::cout << std::hex << std::uppercase <<
+			indent << "         | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" <<
+			indent << "---------|------------------------------------------------\n" <<
+			indent << "00000000 | ";
+		for (u64 i = 0; i < len; ++i)
+		{
+			std::cout <<
+				std::setw(2) << std::setfill('0') << (u32)ptr[i] << ' ';
+
+			if ((i + 1) % 16 == 0 && i != len - 1)
+				std::cout << "\n" << indent <<
+				std::setw(8) << std::setfill('0') << i + 1 << " | ";
+		}
+	}
+	else
+	{
+		std::cout << std::hex << std::uppercase <<
+			indent << "                 | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" <<
+			indent << "-----------------|------------------------------------------------\n" <<
+			indent << "0000000000000000 | ";
+		for (u64 i = 0; i < len; ++i)
+		{
+			std::cout <<
+				std::setw(2) << std::setfill('0') << (u32)ptr[i] << ' ';
+
+			if ((i + 1) % 16 == 0)
+				std::cout << "\n" << indent <<
+				std::setw(16) << std::setfill('0') << i + 1 << " | ";
+		}
+	}
+	std::cout << std::dec << std::nouppercase << "\n";
+}

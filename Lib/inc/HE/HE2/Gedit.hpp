@@ -3,6 +3,7 @@
 
 #include "HE/Bina.hpp"
 #include "HE/HE2/Object.hpp"
+#include "Devil/Result.inl"
 
 namespace fln::he2
 {
@@ -31,6 +32,6 @@ namespace fln::he2
 		u64* m_ObjectOffsetTable;
 		Object* m_Objects;
 
-		static GeditDescriptor Load(cstr filePath);
+		static Result<GeditDescriptor> Load(cstr filePath);
 	};
 }
