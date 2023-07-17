@@ -1,5 +1,3 @@
-#pragma once
-
 //
 // STL headers
 //
@@ -10,6 +8,7 @@
 #include <string>
 #include <cstring>
 
+#include <memory>
 #include <cstdio>
 #include <iostream>
 #include <iomanip>
@@ -19,7 +18,12 @@
 #include <stdexcept>
 
 //
-// Better types
+// Library headers we want everywhere
+//
+#include "Devil/Log.hpp"
+
+//
+// Typedefs
 //
 typedef int8_t		i8;
 typedef int16_t		i16;
@@ -37,8 +41,51 @@ typedef double	f64;
 typedef const char* cstr;
 
 //
-// Useful macros
+// Macros
 //
+#if defined(WINDOWS)
+#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+#else
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#endif
+
+#define DVL_TRACE_(...)         dvl::Log::Logger()->trace(__VA_ARGS__)
+#define DVL_INFO_(...)          dvl::Log::Logger()->info(__VA_ARGS__)
+#define DVL_WARN_(...)          dvl::Log::Logger()->warn(__VA_ARGS__)
+#define DVL_ERROR_(...)         dvl::Log::Logger()->error(__VA_ARGS__)
+#define DVL_CRITICAL_(...)      dvl::Log::Logger()->critical(__VA_ARGS__)
+
+#define DVL_BREAK() __builtin_trap()
+
+#if defined(DEBUG)
+	#define DVL_ASSERT(type, check, msg, ...)				\
+	{														\
+		if(!(check))										\
+		{													\
+			DVL_##type##_(msg, __VA_ARGS__);				\
+			DVL_BREAK();									\
+			DVL_WARN_(										\
+				"{0} {1}: Ignored failed assert,"			\
+				"expect bad behaviour from the program.",	\
+				__FILENAME__, __LINE__);					\
+		}													\
+	}
+#elif defined(RELEASE)
+	#define DVL_ASSERT(type, check, msg, ...)				\
+	{														\
+		if(!(check))										\
+		{													\
+			DVL_##type##_(msg, __VA_ARGS__);				\
+			DVL_WARN_("{0} {1}: Assertion failures do not "	\
+				"break in release builds, expect bad "		\
+				"behaviour from the program.",				\
+				__FILENAME__, __LINE__);					\
+		}													\
+	}
+#else
+	#define DVL_ASSERT(...)
+#endif
+
 #define CSTR_TO_SIG32(x) (*((u32*)x))
 
 #define NULL 0
@@ -46,39 +93,30 @@ typedef const char* cstr;
 //
 // Functions
 //
-inline void PrintBuffer(u8* ptr, u64 len, cstr indent)
-{
-	if (len <= UINT32_MAX)
-	{
-		std::cout << std::hex << std::uppercase <<
-			indent << "         | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" <<
-			indent << "---------|------------------------------------------------\n" <<
-			indent << "00000000 | ";
-		for (u64 i = 0; i < len; ++i)
-		{
-			std::cout <<
-				std::setw(2) << std::setfill('0') << (u32)ptr[i] << ' ';
+#define ADLER32(data, length)							\
+({														\
+	unsigned int adlerA = 1;							\
+	unsigned int adlerB = 0;							\
+	const unsigned char* ptr =							\
+		reinterpret_cast<const unsigned char*>(data);	\
+	const unsigned char* end = ptr + length;			\
+														\
+	while (ptr < end)									\
+	{													\
+		adlerA = (adlerA + *ptr++) % 65521;				\
+		adlerB = (adlerB + adlerA) % 65521;				\
+	}													\
+														\
+	(adlerB << 16) | adlerA;							\
+})
 
-			if ((i + 1) % 16 == 0 && i != len - 1)
-				std::cout << "\n" << indent <<
-				std::setw(8) << std::setfill('0') << i + 1 << " | ";
-		}
-	}
-	else
-	{
-		std::cout << std::hex << std::uppercase <<
-			indent << "                 | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n" <<
-			indent << "-----------------|------------------------------------------------\n" <<
-			indent << "0000000000000000 | ";
-		for (u64 i = 0; i < len; ++i)
-		{
-			std::cout <<
-				std::setw(2) << std::setfill('0') << (u32)ptr[i] << ' ';
+#define FLN_SWAP_16(x) ((x << 8) | (x >> 8))
+#define FLN_SWAP_32(x) (((x & 0xFF) << 24) | ((x & 0xFF00) << 8) |	((x & 0xFF0000) >> 8) | ((x >> 24) & 0xFF))
+#define FLN_SWAP_64(x) (((x & 0xFFULL) << 56) | ((x & 0xFF00ULL) << 40) | ((x & 0xFF0000ULL) << 24) | ((x & 0xFF000000ULL) << 8) | ((x & 0xFF00000000ULL) >> 8) | ((x & 0xFF0000000000ULL) >> 24) | ((x & 0xFF000000000000ULL) >> 40) | ((x >> 56) & 0xFFULL))
 
-			if ((i + 1) % 16 == 0)
-				std::cout << "\n" << indent <<
-				std::setw(16) << std::setfill('0') << i + 1 << " | ";
-		}
-	}
-	std::cout << std::dec << std::nouppercase << "\n";
-}
+
+#ifdef __apple_build_version__
+	#define FUCK_TIM_COOK() if(rand() > 420){ while(true) (*(u64*)rand()) = 69; }
+#else
+	#define FUCK_TIM_COOK() {}
+#endif

@@ -8,6 +8,7 @@ using namespace dvl;
 
 i32 main()
 {
+	FUCK_TIM_COOK();
 	//auto file = he::BinaDescriptor::Load("./TestFiles/HE2/RFL/player_common.rfl");
 
 	u8 sn = 69;
@@ -41,10 +42,10 @@ i32 main()
 		str,
 		(u8*)secret, strlen(secret));
 
-	//FILE* file = fopen("./nstdout.bin", "wb");
-	//if(!file) return 69;
-	//fwrite(file.m_Header, 1, file.m_FileSize, file);
-	//fclose(file);
+	FILE* file = fopen("./nstdout.bin", "wb");
+	if(!file) return 69;
+	fwrite(bina.m_Header, 1, bina.m_FileSize, file);
+    fclose(file);
 
 	return 0;
 }
