@@ -7,8 +7,8 @@ workspace "FallenAngel"
 	}
 	platforms
 	{
-		"Windows",
-		"Linux"
+		"Linux",
+		"Windows"
 	}
 
 	project "FallenAngel"
@@ -16,7 +16,6 @@ workspace "FallenAngel"
 		language "C++"
 		cppdialect "C++20"
 		cdialect "C17"
-		toolset "clang"
 		targetdir "./bin"
 
 		files
@@ -28,17 +27,13 @@ workspace "FallenAngel"
 			"./Lib/src/**.cpp",
 
 			"./Lib/pch.cpp",
-			"./Lib/pch.hpp",
-
-			"./Lib/deps/spdlog/include/**.h"
+			"./Lib/pch.hpp"
 		}
 
 		includedirs
 		{
 			"./Lib/inc/",
 			"./Lib/",
-
-			"./Lib/deps/spdlog/include/"
 		}
 
 		defines

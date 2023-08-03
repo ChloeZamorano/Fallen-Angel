@@ -1,4 +1,4 @@
 clear
 premake5 gmake2
 make
-bin/FallenAngel > stdout.txt
+./bin/FallenAngel > ./stdout.txt

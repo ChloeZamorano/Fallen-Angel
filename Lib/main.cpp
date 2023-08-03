@@ -1,50 +1,76 @@
 #include "pch.hpp"
 
 #include "HE/Bina/Bina.hpp"
-#include "Devil/Log.hpp"
+#include "Devil/Array.hpp"
 
 using namespace fln;
-using namespace dvl;
+
+struct basicInfo
+{
+	cstr first_name;
+	cstr last_name;
+	cstr gender;
+};
+
+struct entry
+{
+	basicInfo info;
+	u32 id;
+	cstr email;
+	u8 ip_address[4];
+};
+
+struct json
+{
+	Array<entry, u32> entries;
+};
+
+//[{
+//  "id": 1,
+//  "first_name": "Jeanette",
+//  "last_name": "Penddreth",
+//  "email": "jpenddreth0@census.gov",
+//  "gender": "Female",
+//  "ip_address": "26.58.193.2"
+//}, {
+//  "id": 2,
+//  "first_name": "Giavani",
+//  "last_name": "Frediani",
+//  "email": "gfrediani1@senate.gov",
+//  "gender": "Male",
+//  "ip_address": "229.179.4.212"
+//}, {
+//  "id": 3,
+//  "first_name": "Noell",
+//  "last_name": "Bea",
+//  "email": "nbea2@imageshack.us",
+//  "gender": "Female",
+//  "ip_address": "180.66.162.255"
+//}, {
+//  "id": 4,
+//  "first_name": "Willard",
+//  "last_name": "Valek",
+//  "email": "wvalek3@vk.com",
+//  "gender": "Male",
+//  "ip_address": "67.76.188.26"
+//}]
+
 
 i32 main()
 {
-	FUCK_TIM_COOK();
-	//auto file = he::BinaDescriptor::Load("./TestFiles/HE2/RFL/player_common.rfl");
+	auto bina = he::BinaDescriptor::Load("./TestFiles/HE2/RFL/player_common.rfl");
+	
+	auto members = bina.m_Node->GetMembers();
+	auto strings = bina.m_Node->GetStrings();
 
-	u8 sn = 69;
-	u8 array[7]
-	{
-		'A',
-		58,
-		'P',
-		'P',
-		255,
-		0,
-		'E',
-	};
-	u32 inty = 420;
-	std::vector<std::pair<u8*, u64>> var
-	{
-		{ (u8*)&sn, sizeof(sn) },
-		{ (u8*)&array, sizeof(array) },
-		{ (u8*)&inty, sizeof(inty) },
-	};
-	std::vector<cstr> str
-	{
-		"Hi hello there :3",
-		"Cutie Clyde",
-		"God he's hot",
-	};
-	cstr secret = "This is totally not a super secret message :0";
-
-	auto bina = he::BinaDescriptor::Build(
-		var,
-		str,
-		(u8*)secret, strlen(secret));
-
-	FILE* file = fopen("./nstdout.bin", "wb");
+	auto buf = he::BinaDescriptor::Build(
+		members, strings,
+		NULL, 0,
+		'L');
+	
+	FILE* file = fopen("./player_common.rfl", "wb");
 	if(!file) return 69;
-	fwrite(bina.m_Header, 1, bina.m_FileSize, file);
+	fwrite(buf.first.get(), 1, buf.second, file);
     fclose(file);
 
 	return 0;

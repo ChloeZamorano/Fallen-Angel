@@ -22,6 +22,13 @@ namespace fln
 			memcpy(p_Data.get() + sizeof(SizeT), raw, count * sizeof(T));
 		}
 
+		inline Array(std::initializer_list<T> list) :
+			p_Data(new u8[sizeof(SizeT) + list.size() * sizeof(T)])
+		{
+			*reinterpret_cast<SizeT*>(p_Data.get()) = list.size();
+			memcpy(p_Data.get() + sizeof(SizeT), list.begin(), list.size() * sizeof(T));
+		}
+
 		inline Array(const Array<T, SizeT>& other) :
 			p_Data(new u8[other.Width()])
 		{

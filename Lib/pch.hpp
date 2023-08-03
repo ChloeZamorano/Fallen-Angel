@@ -18,11 +18,6 @@
 #include <stdexcept>
 
 //
-// Library headers we want everywhere
-//
-#include "Devil/Log.hpp"
-
-//
 // Typedefs
 //
 typedef int8_t		i8;
@@ -49,44 +44,7 @@ typedef const char* cstr;
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
-#define DVL_TRACE_(...)         dvl::Log::Logger()->trace(__VA_ARGS__)
-#define DVL_INFO_(...)          dvl::Log::Logger()->info(__VA_ARGS__)
-#define DVL_WARN_(...)          dvl::Log::Logger()->warn(__VA_ARGS__)
-#define DVL_ERROR_(...)         dvl::Log::Logger()->error(__VA_ARGS__)
-#define DVL_CRITICAL_(...)      dvl::Log::Logger()->critical(__VA_ARGS__)
-
 #define DVL_BREAK() __builtin_trap()
-
-#if defined(DEBUG)
-	#define DVL_ASSERT(type, check, msg, ...)				\
-	{														\
-		if(!(check))										\
-		{													\
-			DVL_##type##_(msg, __VA_ARGS__);				\
-			DVL_BREAK();									\
-			DVL_WARN_(										\
-				"{0} {1}: Ignored failed assert,"			\
-				"expect bad behaviour from the program.",	\
-				__FILENAME__, __LINE__);					\
-		}													\
-	}
-#elif defined(RELEASE)
-	#define DVL_ASSERT(type, check, msg, ...)				\
-	{														\
-		if(!(check))										\
-		{													\
-			DVL_##type##_(msg, __VA_ARGS__);				\
-			DVL_WARN_("{0} {1}: Assertion failures do not "	\
-				"break in release builds, expect bad "		\
-				"behaviour from the program.",				\
-				__FILENAME__, __LINE__);					\
-		}													\
-	}
-#else
-	#define DVL_ASSERT(...)
-#endif
-
-#define CSTR_TO_SIG32(x) (*((u32*)x))
 
 #define NULL 0
 
@@ -98,7 +56,8 @@ typedef const char* cstr;
 	unsigned int adlerA = 1;							\
 	unsigned int adlerB = 0;							\
 	const unsigned char* ptr =							\
-		reinterpret_cast<const unsigned char*>(data);	\
+		const_cast<const unsigned char*>(				\
+		reinterpret_cast<unsigned char*>(data));		\
 	const unsigned char* end = ptr + length;			\
 														\
 	while (ptr < end)									\
