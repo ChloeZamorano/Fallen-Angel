@@ -46,8 +46,6 @@ typedef const char* cstr;
 
 #define DVL_BREAK() __builtin_trap()
 
-#define NULL 0
-
 //
 // Functions
 //

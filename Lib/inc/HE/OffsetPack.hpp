@@ -1,7 +1,9 @@
 #pragma once
 #include "pch.hpp"
 
-#include "Devil/Array.hpp"
+#include "Devil/Array.inl"
+
+#define HE_BINA_FIRST_OFFSET 0
 
 #define HE_OFFSET_TYPE_00 ((u8)0x00)
 #define HE_OFFSET_TYPE_06 ((u8)0x40)
@@ -122,7 +124,7 @@ namespace fln::he
 		for(u32 i = 0; i < vars.Count(); ++i)
 		{
 			if(i == 0)
-				PackOffset(table, 16);
+				PackOffset(table, HE_BINA_FIRST_OFFSET);
 			else
 				PackOffset(table, vars[i-1].width + diffs[i-1]);
 		}

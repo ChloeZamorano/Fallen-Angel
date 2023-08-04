@@ -1,8 +1,26 @@
 #pragma once
 #include "pch.hpp"
 
-#include "Devil/Array.hpp"
+#include "Devil/Array.inl"
 #include "HE/OffsetPack.hpp"
+
+#ifndef REFLECTION_GUARD
+	#define X(TYPE) TYPE,
+	#define RFL_TYPE_ENTRIES()	\
+		X(u8)					\
+		X(u16)					\
+		X(u32)					\
+		X(u64)					\
+		X(i8)					\
+		X(i16)					\
+		X(i32)					\
+		X(i64)					\
+		X(f32)					\
+		X(f64)					\
+		X(cstr)					\
+
+	#include "Devil/Reflection/Reflect.inl"
+#endif
 
 namespace fln::he
 {
@@ -76,5 +94,54 @@ namespace fln::he
 			const Array<cstr, u32>& Strings,
 			const u8* Secret, const u64 SecretWidth,
 			const char Endian);
+
+#ifndef REFLECTION_GUARD
+		template<typename T>
+		static std::pair<std::unique_ptr<u8[]>, u64> StaticBuild(
+			const T& object,
+			const u8* Secret, const u64 SecretWidth,
+			const char Endian)
+		{
+			const Class* objInf = GetClass<T>();
+			std::vector<VarBuf> Variables;
+			std::vector<cstr> Strings;
+
+			for (const auto& field : objInf->Fields)
+			{
+				const u8* source = reinterpret_cast<const u8*>(&object) + field.Offset;
+
+				switch (field.TypeInfo->ID)
+				{
+					case TypeName::i8:
+					case TypeName::i16:
+					case TypeName::i32:
+					case TypeName::u8:
+					case TypeName::u16:
+					case TypeName::u32:
+					{
+						Variables.emplace_back(VarBuf{
+							.buffer = const_cast<u8*>(source),
+							.width = field.TypeInfo->Size
+						});
+						break;
+					}
+					case TypeName::cstr:
+					{
+						Strings.emplace_back(reinterpret_cast<cstr*>(const_cast<u8*>(source))[0]);
+					}
+					default:
+						
+						break;
+				}
+			}
+
+			return Build(
+				Array<VarBuf, u32>(&Variables[0], Variables.size()),
+				Array<cstr, u32>(&Strings[0], Strings.size()),
+				Secret, SecretWidth,
+				Endian
+			);
+		}
+#endif
 	};
 }

@@ -38,7 +38,8 @@ workspace "FallenAngel"
 
 		defines
 		{
-			"_CRT_SECURE_NO_WARNINGS"
+			"_CRT_SECURE_NO_WARNINGS",
+			"WIN32_LEAN_AND_MEAN"
 		}
 		
 		pchsource "./Lib/pch.cpp"

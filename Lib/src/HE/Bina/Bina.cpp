@@ -1,5 +1,8 @@
 #include "pch.hpp"
-#include "HE/Bina/Bina.hpp"
+
+#define REFLECTION_GUARD
+	#include "HE/Bina/Bina.hpp"
+#undef REFLECTION_GUARD
 
 namespace fln::he
 {
@@ -112,7 +115,7 @@ namespace fln::he
 		// TODO: Rearrange this to be more readable.
 		//
 		Array<u32, u32> dataDiffs(Variables.Count());
-		u32 dataSize = 4;
+		u32 dataSize = HE_BINA_FIRST_OFFSET;
 		for(u32 i = 0; i < Variables.Count(); ++i)
 		{
 			if (Variables[i].width >= 4 && (Variables[i].width & 3) == 0)
@@ -129,7 +132,7 @@ namespace fln::he
 		}
 
 		Array<u8, u32> data(dataSize);
-		u8* pos = reinterpret_cast<u8*>(data.Begin() + 4);
+		u8* pos = reinterpret_cast<u8*>(data.Begin() + HE_BINA_FIRST_OFFSET);
 		for(u32 i = 0; i < Variables.Count(); ++i)
 		{
 			u8* var = Variables[i].buffer;
